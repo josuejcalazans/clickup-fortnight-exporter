@@ -1,16 +1,4 @@
-import { fileURLToPath } from "node:url";
-import path from "node:path";
- 
-if (typeof process.loadEnvFile === "function") {
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  const envPath = path.join(__dirname, "..", ".env");
-  try {
-    process.loadEnvFile(envPath);
-  } catch { 
-  }
-}
-
+process.loadEnvFile();
 export const PORT = process.env.PORT || 3000;
 export const CLICKUP_TOKEN = process.env.CLICKUP_API_TOKEN;
 export const TEAM_ID = process.env.CLICKUP_TEAM_ID;

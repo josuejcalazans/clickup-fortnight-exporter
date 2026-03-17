@@ -1,11 +1,11 @@
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
-import { DEFAULT_HOURLY_RATE } from "./config.js";
-import { fetchTimeEntriesForRange } from "./services/clickup.service.js";
-import { saveFilesFromTimeEntries } from "./services/export.service.js";
-import { getQuinzenaRange } from "./utils/time.js";
+import { DEFAULT_HOURLY_RATE } from "./config";
+import { fetchTimeEntriesForRange } from "./services/clickup.service";
+import { saveFilesFromTimeEntries } from "./services/export.service";
+import { getQuinzenaRange, type TimeRange } from "./utils/time";
 
-export async function runCli() {
+export async function runCli(): Promise<void> {
   console.clear();
   console.log("===============================================");
   console.log("   ClickUp Time Exporter - CLI Quinzenal");
@@ -28,7 +28,7 @@ export async function runCli() {
 
     const useCustom = (await rl.question("Deseja informar manualmente o período? (s/N) ")).trim();
 
-    let range;
+    let range: TimeRange;
 
     if (useCustom.toLowerCase() === "s") {
       console.log();
@@ -54,8 +54,8 @@ export async function runCli() {
         await rl.question(`Data final (DD/MM/AAAA) [${defaultEndStr}]: `)
       ).trim();
 
-      let startDate;
-      let endDate;
+      let startDate: Date;
+      let endDate: Date;
 
       if (!startDateInput) {
         startDate = new Date(defaultStartDate);
@@ -133,7 +133,8 @@ export async function runCli() {
     console.log("===============================================");
   } catch (err) {
     console.error();
-    console.error("Erro na execução da CLI:", err?.message || err);
+    const error = err as Error;
+    console.error("Erro na execução da CLI:", error.message || error);
     process.exitCode = 1;
   } finally {
     rl.close();

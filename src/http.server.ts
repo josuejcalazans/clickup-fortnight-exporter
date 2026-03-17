@@ -1,19 +1,23 @@
-import express from "express";
+import express, { type Request, type Response } from "express";
 import cron from "node-cron";
 import { ensureEnv, PORT } from "./config.js";
-import { getLastFortnightRange, getQuinzenaRange } from "./utils/time.js";
+import {
+  getLastFortnightRange,
+  getQuinzenaRange,
+  type TimeRange,
+} from "./utils/time.js";
 import { fetchTimeEntriesForRange } from "./services/clickup.service.js";
 import { saveFilesFromTimeEntries } from "./services/export.service.js";
 
-export function startHttpServer() {
+export function startHttpServer(): void {
   ensureEnv();
 
   const app = express();
 
-  app.get("/export/fortnight", async (req, res) => {
+  app.get("/export/fortnight", async (req: Request, res: Response) => {
     try {
-      const { start, end } = req.query;
-      const range = getQuinzenaRange({
+      const { start, end } = req.query as { start?: string; end?: string };
+      const range: TimeRange = getQuinzenaRange({
         startParam: start,
         endParam: end,
       });
@@ -34,10 +38,12 @@ export function startHttpServer() {
           end: new Date(range.end).toISOString(),
         },
       });
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(err?.response?.data || err.message);
-      res.status(400).json({ error: err.message || "Erro ao gerar arquivos." });
+    } catch (err: unknown) {
+      const error = err as Error & { response?: { data?: unknown } };
+      console.error(error.response?.data || error.message);
+      res
+        .status(400)
+        .json({ error: error.message || "Erro ao gerar arquivos." });
     }
   });
 
@@ -47,28 +53,25 @@ export function startHttpServer() {
       const range = getLastFortnightRange();
       const entries = await fetchTimeEntriesForRange(range);
       const result = saveFilesFromTimeEntries(entries, range);
-      // eslint-disable-next-line no-console
+
       console.log(
         `[CRON] Arquivos gerados: ${result.csvFilePath}, ${result.txtFilePath} (entries: ${entries.length})`,
       );
-    } catch (err) {
-      // eslint-disable-next-line no-console
+    } catch (err: unknown) {
+      const error = err as Error & { response?: { data?: unknown } };
       console.error(
         "[CRON] Erro ao gerar arquivos:",
-        err?.response?.data || err.message,
+        error.response?.data || error.message,
       );
     }
   });
 
   app.listen(PORT, () => {
-    // eslint-disable-next-line no-console
     console.log(`Servidor rodando em http://localhost:${PORT}`);
-    // eslint-disable-next-line no-console
     console.log(
       "Use GET /export/fortnight para gerar o CSV + TXT quinzenal (regra automática de quinzena).",
     );
-    // eslint-disable-next-line no-console
-    console.log("Para usar a CLI interativa, rode: node src/server.js --cli");
+    console.log("Para usar a CLI interativa, rode: npm run dev:cli ou npm run cli");
   });
 }
 

@@ -4,9 +4,10 @@
   "main": "server.js",
   "type": "module",
   "scripts": {
-    "start": "node src/server.js",
-    "cli": "node src/server.js --cli",
-    "d": "curl http://localhost:3117/export/fortnight"
+    "start": "node dist/server.js",
+    "dev:cli": "tsx  src/server.ts --watch --cli",
+    "dev": "tsx  src/server.ts --watch",
+    "cli": "node src/server.ts --cli"
   },
   "keywords": [],
   "author": "",
@@ -16,5 +17,13 @@
     "csv-stringify": "^6.6.0",
     "express": "^5.2.1",
     "node-cron": "^4.2.1"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.7",
+    "@tsconfig/bases": "^1.0.23",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.5.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
   }
 }

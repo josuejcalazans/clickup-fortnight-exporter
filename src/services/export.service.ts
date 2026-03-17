@@ -1,14 +1,15 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { stringify } from "csv-stringify/sync";
-import { DEFAULT_HOURLY_RATE } from "../config.js";
-import { formatLocalDateYMD, msToRoundedMinutes } from "../utils/time.js";
+import { DEFAULT_HOURLY_RATE } from "../config";
+import { formatLocalDateYMD, msToRoundedMinutes, type TimeRange } from "../utils/time";
+import type { ClickUpTimeEntry } from "./clickup.service";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-export function saveFilesFromTimeEntries(entries, { start, end }, hourlyRate = DEFAULT_HOURLY_RATE) {
+export function saveFilesFromTimeEntries(
+  entries: ClickUpTimeEntry[],
+  { start, end }: TimeRange,
+  hourlyRate: number = DEFAULT_HOURLY_RATE,
+) {
   const projectRoot = path.join(__dirname, "..", "..");
   const exportsDir = path.join(projectRoot, "exports");
 

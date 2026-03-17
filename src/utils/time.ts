@@ -1,4 +1,9 @@
-export function getLastFortnightRange() {
+export interface TimeRange {
+  start: number;
+  end: number;
+}
+
+export function getLastFortnightRange(): TimeRange {
   const now = new Date();
   const end = now.getTime();
   const start = new Date(now);
@@ -10,7 +15,10 @@ export function getLastFortnightRange() {
   };
 }
 
-export function getQuinzenaRange({ startParam, endParam }) {
+export function getQuinzenaRange({
+  startParam,
+  endParam,
+}: { startParam?: string; endParam?: string }): TimeRange {
   // 1) Se vierem datas pela URL (YYYY-MM-DD), respeita
   if (startParam) {
     const startDate = new Date(startParam);
@@ -18,7 +26,7 @@ export function getQuinzenaRange({ startParam, endParam }) {
       throw new Error("Parâmetro 'start' inválido. Use YYYY-MM-DD.");
     }
 
-    let endDate;
+    let endDate: Date;
     if (endParam) {
       endDate = new Date(endParam);
       if (Number.isNaN(endDate.getTime())) {
@@ -39,8 +47,8 @@ export function getQuinzenaRange({ startParam, endParam }) {
   const month = now.getMonth();
   const day = now.getDate();
 
-  let startDate;
-  let endDate;
+  let startDate: Date;
+  let endDate: Date;
 
   if (day <= 15) {
     startDate = new Date(year, month, 1, 0, 0, 0, 0);
@@ -56,14 +64,18 @@ export function getQuinzenaRange({ startParam, endParam }) {
   };
 }
 
-export function msToRoundedMinutes(ms) {
+export function msToRoundedMinutes(ms: number): {
+  hours: number;
+  minutes: number;
+  totalMinutes: number;
+} {
   const totalMinutes = Math.round(ms / 60000);
   const hours = Math.floor(totalMinutes / 60);
   const minutes = totalMinutes % 60;
   return { hours, minutes, totalMinutes };
 }
 
-export function formatLocalDateYMD(timestamp) {
+export function formatLocalDateYMD(timestamp: number): string {
   const d = new Date(timestamp);
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
