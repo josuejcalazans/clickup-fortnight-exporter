@@ -1,13 +1,13 @@
 import express, { type Request, type Response } from "express";
 import cron from "node-cron";
-import { ensureEnv, PORT } from "./config.js";
+import { ensureEnv, PORT } from "./config";
 import {
   getLastFortnightRange,
   getQuinzenaRange,
   type TimeRange,
-} from "./utils/time.js";
-import { fetchTimeEntriesForRange } from "./services/clickup.service.js";
-import { saveFilesFromTimeEntries } from "./services/export.service.js";
+} from "./utils/time";
+import { fetchTimeEntriesForRange } from "./services/clickup.service";
+import { saveFilesFromTimeEntries } from "./services/export.service";
 
 export function startHttpServer(): void {
   ensureEnv();

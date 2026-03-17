@@ -1,5 +1,5 @@
-import { CLICKUP_TOKEN, TEAM_ID, USER_ID } from "../config";
-import { CLICKUP_BASE_URL } from "../utils/constants";
+import { CLICKUP_TOKEN, TEAM_ID, getUserId } from "../config";
+import { CLICKUP_BASE_URL, CLICKUP_USER_BASE_URL } from "../utils/constants";
 import type { TimeRange } from "../utils/time";
 
 export interface ClickUpTask {
@@ -20,7 +20,7 @@ export async function fetchTimeEntriesForRange({ start, end }: TimeRange): Promi
   const url = new URL(`${CLICKUP_BASE_URL}/team/${TEAM_ID}/time_entries`);
   url.searchParams.set("start_date", String(start));
   url.searchParams.set("end_date", String(end));
-  url.searchParams.set("assignee", String(USER_ID));
+  url.searchParams.set("assignee", String(getUserId()));
 
   const headers: HeadersInit = {
     Authorization: CLICKUP_TOKEN ?? "",
@@ -42,3 +42,13 @@ export async function fetchTimeEntriesForRange({ start, end }: TimeRange): Promi
   return data?.data ?? [];
 }
 
+
+export async function fetchUserInfo() {
+  const response = await fetch(`${CLICKUP_USER_BASE_URL}`, {
+    headers: {
+      Authorization: CLICKUP_TOKEN ?? "",
+    },
+  });
+  const data = await response.json();
+  return data;
+}

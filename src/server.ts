@@ -2,12 +2,16 @@ import { ensureEnv } from "./config";
 import { runCli } from "./cli";
 import { startHttpServer } from "./http.server";
 
-ensureEnv();
+async function bootstrap(): Promise<void> {
+  await ensureEnv();
 
-const isCliMode = process.argv.includes("--cli");
+  const isCliMode = process.argv.includes("--cli");
 
-if (isCliMode) {
-  runCli();
-} else {
-  startHttpServer();
+  if (isCliMode) {
+    await runCli();
+  } else {
+    startHttpServer();
+  }
 }
+
+void bootstrap();

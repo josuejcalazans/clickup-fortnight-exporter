@@ -2,12 +2,13 @@
   "name": "clickup-time-exporter",
   "version": "1.0.0",
   "main": "server.js",
-  "type": "module",
+  
   "scripts": {
     "start": "node dist/server.js",
     "dev:cli": "tsx  src/server.ts --watch --cli",
     "dev": "tsx  src/server.ts --watch",
-    "cli": "node src/server.ts --cli"
+    "cli": "node dist/server.js --cli",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
