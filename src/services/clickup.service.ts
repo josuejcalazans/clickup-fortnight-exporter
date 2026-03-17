@@ -16,24 +16,26 @@ export interface ClickUpTimeEntry {
   [key: string]: unknown;
 }
 
-export interface ClickUpUserInfo {
-  id: string;
-  email: string;
-  name: string;
-  username: string;
-  color: string;
-  profilePicture: string;
-  initials: string;
-  week_start_day: string | null;
-  global_font_support: boolean;
-  timezone: string;
-  [key: string]: unknown;
-
+export interface ClickUpUserInfo   {
+  user: {
+    id: string;
+    email: string;
+    name: string;
+    username: string;
+    color: string;
+    profilePicture: string;
+    initials: string;
+    week_start_day: string | null;
+    global_font_support: boolean;
+    timezone: string;
+    [key: string]: unknown;
+  }
  
 }
 export async function fetchTimeEntriesForRange({ start, end }: TimeRange, userInfo: ClickUpUserInfo): Promise<ClickUpTimeEntry[]> {
  
-  const userId = userInfo.id;
+  const userId = userInfo.user.id;
+ 
   const url = new URL(`${CLICKUP_BASE_URL}/team/${TEAM_ID}/time_entries`);
   url.searchParams.set("start_date", String(start));
   url.searchParams.set("end_date", String(end));
@@ -47,7 +49,7 @@ export async function fetchTimeEntriesForRange({ start, end }: TimeRange, userIn
     method: "GET",
     headers,
   });
-
+ 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
     throw new Error(
@@ -58,7 +60,6 @@ export async function fetchTimeEntriesForRange({ start, end }: TimeRange, userIn
   const data = await response.json();
   return data?.data ?? [];
 }
-
 
 export async function fetchUserInfo(): Promise<ClickUpUserInfo> {
   try {

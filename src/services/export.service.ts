@@ -5,17 +5,23 @@ import { DEFAULT_HOURLY_RATE } from "../config";
 import { formatLocalDateYMD, msToRoundedMinutes, type TimeRange } from "../utils/time";
 import type { ClickUpTimeEntry } from "./clickup.service";
 
-export function saveFilesFromTimeEntries(
-  entries: ClickUpTimeEntry[],
-  { start, end }: TimeRange,
-  hourlyRate: number = DEFAULT_HOURLY_RATE,
-) {
+export function getExportDir() {
   const projectRoot = path.join(__dirname, "..", "..");
   const exportsDir = path.join(projectRoot, "exports");
 
   if (!fs.existsSync(exportsDir)) {
     fs.mkdirSync(exportsDir);
   }
+
+  return exportsDir;
+}
+
+export function saveFilesFromTimeEntries(
+  entries: ClickUpTimeEntry[],
+  { start, end }: TimeRange,
+  hourlyRate: number = DEFAULT_HOURLY_RATE,
+) {
+  const exportsDir = getExportDir();
 
   const startDate = formatLocalDateYMD(start);
   const endDate = formatLocalDateYMD(end);
@@ -65,7 +71,7 @@ export function saveFilesFromTimeEntries(
     )})\n` + `Total Amount: $${totalAmount.toFixed(2)}\n`;
 
   const txtFilename = `summary_${startDate}_to_${endDate}.txt`;
-  const txtFilePath = path.join(__dirname, "..", "exports", txtFilename);
+  const txtFilePath = path.join(exportsDir, txtFilename);
 
   fs.writeFileSync(txtFilePath, summaryText, "utf8");
 
