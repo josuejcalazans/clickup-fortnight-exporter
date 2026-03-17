@@ -1,7 +1,7 @@
 import readline from "node:readline/promises";
 import { stdin as input, stdout as output } from "node:process";
 import { DEFAULT_HOURLY_RATE } from "./config";
-import { fetchTimeEntriesForRange } from "./services/clickup.service";
+import { fetchTimeEntriesForRange, fetchUserInfo } from "./services/clickup.service";
 import { saveFilesFromTimeEntries } from "./services/export.service";
 import { getQuinzenaRange, type TimeRange } from "./utils/time";
 
@@ -113,7 +113,9 @@ export async function runCli(): Promise<void> {
 
     console.log();
     console.log("Buscando time entries no ClickUp...");
-    const entries = await fetchTimeEntriesForRange(range);
+    const userInfo = await fetchUserInfo();
+   
+    const entries = await fetchTimeEntriesForRange(range, userInfo);
 
     console.log(`Encontradas ${entries.length} time entries. Gerando arquivos...`);
     const result = saveFilesFromTimeEntries(entries, range, hourlyRate);

@@ -6,7 +6,7 @@ import {
   getQuinzenaRange,
   type TimeRange,
 } from "./utils/time";
-import { fetchTimeEntriesForRange } from "./services/clickup.service";
+import { fetchTimeEntriesForRange, fetchUserInfo } from "./services/clickup.service";
 import { saveFilesFromTimeEntries } from "./services/export.service";
 
 export function startHttpServer(): void {
@@ -21,8 +21,9 @@ export function startHttpServer(): void {
         startParam: start,
         endParam: end,
       });
+      const userInfo = await fetchUserInfo();
 
-      const entries = await fetchTimeEntriesForRange(range);
+      const entries = await fetchTimeEntriesForRange(range,userInfo);
       const result = saveFilesFromTimeEntries(entries, range);
 
       res.json({
@@ -51,7 +52,8 @@ export function startHttpServer(): void {
   cron.schedule("0 1 1,16 * *", async () => {
     try {
       const range = getLastFortnightRange();
-      const entries = await fetchTimeEntriesForRange(range);
+      const userInfo = await fetchUserInfo();
+      const entries = await fetchTimeEntriesForRange(range, userInfo);
       const result = saveFilesFromTimeEntries(entries, range);
 
       console.log(
