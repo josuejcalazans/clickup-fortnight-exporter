@@ -1,0 +1,20 @@
+{
+  "name": "clickup-time-exporter",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "cli": "node src/server.js --cli",
+    "d": "curl http://localhost:3117/export/fortnight"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.15.1",
+  "dependencies": {
+    "csv-stringify": "^6.6.0",
+    "express": "^5.2.1",
+    "node-cron": "^4.2.1"
+  }
+}
