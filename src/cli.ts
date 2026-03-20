@@ -118,7 +118,7 @@ export async function runCli(): Promise<void> {
     const entries = await fetchTimeEntriesForRange(range, userInfo);
 
     console.log(`Encontradas ${entries.length} time entries. Gerando arquivos...`);
-    const result = saveFilesFromTimeEntries(entries, range, hourlyRate);
+    const result = await saveFilesFromTimeEntries(entries, range, hourlyRate);
 
     console.log();
     console.log("===============================================");
@@ -126,12 +126,20 @@ export async function runCli(): Promise<void> {
     console.log("===============================================");
     console.log(`CSV: ${result.csvFilePath}`);
     console.log(`Resumo: ${result.txtFilePath}`);
+    if (result.invoicePdfFilePath) {
+      console.log(`Invoice PDF: ${result.invoicePdfFilePath}`);
+    }
     console.log(
       `Total de horas: ${result.totalHoursInt}h ${result.totalMinutesRemainder}m (${result.totalHoursDecimal.toFixed(
         2,
       )})`,
     );
     console.log(`Valor total: $${result.totalAmount.toFixed(2)}`);
+    if (result.emailSent) {
+      console.log("E-mail: enviado ao Finance.");
+    } else if (result.emailError) {
+      console.log(`E-mail: falhou — ${result.emailError}`);
+    }
     console.log("===============================================");
   } catch (err) {
     console.error();

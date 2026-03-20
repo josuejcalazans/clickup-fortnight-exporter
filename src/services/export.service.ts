@@ -4,6 +4,8 @@ import { stringify } from "csv-stringify/sync";
 import { DEFAULT_HOURLY_RATE } from "../config";
 import { formatLocalDateYMD, msToRoundedMinutes, type TimeRange } from "../utils/time";
 import type { ClickUpTimeEntry } from "./clickup.service";
+import { sendInvoiceExportEmail, loadInvoiceEmailEnv } from "./email.service";
+import { generateInvoicePdf, loadInvoiceEnv } from "./invoice.service";
 
 export function getExportDir() {
   const projectRoot = path.join(__dirname, "..", "..");
@@ -16,11 +18,23 @@ export function getExportDir() {
   return exportsDir;
 }
 
-export function saveFilesFromTimeEntries(
+export type SaveFilesResult = {
+  csvFilePath: string;
+  txtFilePath: string;
+  totalHoursInt: number;
+  totalMinutesRemainder: number;
+  totalHoursDecimal: number;
+  totalAmount: number;
+  invoicePdfFilePath?: string;
+  emailSent?: boolean;
+  emailError?: string;
+};
+
+async function saveFilesFromTimeEntriesAsync(
   entries: ClickUpTimeEntry[],
   { start, end }: TimeRange,
   hourlyRate: number = DEFAULT_HOURLY_RATE,
-) {
+): Promise<SaveFilesResult> {
   const exportsDir = getExportDir();
 
   const startDate = formatLocalDateYMD(start);
@@ -75,13 +89,55 @@ export function saveFilesFromTimeEntries(
 
   fs.writeFileSync(txtFilePath, summaryText, "utf8");
 
-  return {
+  const invoiceEnv = loadInvoiceEnv();
+  let invoicePdfFilePath: string | undefined;
+
+  if (invoiceEnv.enablePdf) {
+    const invoiceFilename = `invoice_${invoiceEnv.invoiceCode}_${startDate}_to_${endDate}.pdf`;
+    invoicePdfFilePath = path.join(exportsDir, invoiceFilename);
+
+    await generateInvoicePdf({
+      env: invoiceEnv,
+      input: {
+        timeRange: { start, end },
+        totalAmount,
+        totalHoursDecimal,
+      },
+      outputPdfPath: invoicePdfFilePath,
+    });
+  }
+
+  const result: SaveFilesResult = {
     csvFilePath,
     txtFilePath,
     totalHoursInt,
     totalMinutesRemainder,
     totalHoursDecimal,
     totalAmount,
+    invoicePdfFilePath,
   };
+
+  const emailEnv = loadInvoiceEmailEnv();
+  if (emailEnv.enable) {
+    try {
+      await sendInvoiceExportEmail({ range: { start, end }, result, emailEnv });
+      result.emailSent = true;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      result.emailError = msg;
+      console.error("[email] Falha ao enviar:", msg);
+    }
+  }
+
+  return result;
+}
+
+// Backwards-compatible name (callers must now await this function).
+export async function saveFilesFromTimeEntries(
+  entries: ClickUpTimeEntry[],
+  range: TimeRange,
+  hourlyRate: number = DEFAULT_HOURLY_RATE,
+): Promise<SaveFilesResult> {
+  return saveFilesFromTimeEntriesAsync(entries, range, hourlyRate);
 }
 

@@ -24,13 +24,16 @@ export function startHttpServer(): void {
       const userInfo = await fetchUserInfo();
 
       const entries = await fetchTimeEntriesForRange(range,userInfo);
-      const result = saveFilesFromTimeEntries(entries, range);
+      const result = await saveFilesFromTimeEntries(entries, range);
 
       res.json({
         message: "Arquivos gerados com sucesso.",
         entriesCount: entries.length,
         csvFilePath: result.csvFilePath,
         txtFilePath: result.txtFilePath,
+        invoicePdfFilePath: result.invoicePdfFilePath,
+        emailSent: result.emailSent ?? false,
+        emailError: result.emailError,
         totalHours: `${result.totalHoursInt}h ${result.totalMinutesRemainder}m`,
         totalHoursDecimal: result.totalHoursDecimal.toFixed(2),
         totalAmount: Number(result.totalAmount.toFixed(2)),
@@ -54,10 +57,10 @@ export function startHttpServer(): void {
       const range = getLastFortnightRange();
       const userInfo = await fetchUserInfo();
       const entries = await fetchTimeEntriesForRange(range, userInfo);
-      const result = saveFilesFromTimeEntries(entries, range);
+      const result = await saveFilesFromTimeEntries(entries, range);
 
       console.log(
-        `[CRON] Arquivos gerados: ${result.csvFilePath}, ${result.txtFilePath} (entries: ${entries.length})`,
+        `[CRON] Arquivos gerados: ${result.csvFilePath}, ${result.txtFilePath}, invoice: ${result.invoicePdfFilePath ?? "skipped"}, email: ${result.emailSent ? "sent" : result.emailError ?? "off"} (entries: ${entries.length})`,
       );
     } catch (err: unknown) {
       const error = err as Error & { response?: { data?: unknown } };
