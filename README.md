@@ -2,7 +2,7 @@
 
 #### ClickUp Time Exporter – CLI & HTTP Service
 
-Node.js CLI and service to export ClickUp time entries to CSV and a summary file with total hours and billing amount. Supports fortnightly (or custom date range) exports, `.env` configuration, and optional automated runs via cron.
+Node.js CLI and service to export ClickUp time entries to CSV, a summary file, and an invoice PDF with the billing total. Supports fortnightly (or custom date range) exports, `.env` configuration, and optional automated runs via cron.
 
 ---
 
@@ -40,11 +40,17 @@ cp .env.example .env
 CLICKUP_API_TOKEN=your_token_here
 CLICKUP_TEAM_ID=your_team_id_here
 HOURLY_RATE_USD=8
+
+# Optional: invoice PDF (HTML -> PDF via Playwright)
+INVOICE_PDF_ENABLE=1
+INVOICE_CODE=in-1000
+INVOICE_TO_NAME=SpringBolt, LLC
 ```
 
 - **`CLICKUP_API_TOKEN`**: your personal API token (see below).
 - **`CLICKUP_TEAM_ID`**: the ID of your ClickUp Team / Workspace.
 - **`HOURLY_RATE_USD`**: your hourly rate (used to compute the total amount).
+- **`INVOICE_PDF_ENABLE`**: set to `1` to generate `exports/invoice_*.pdf` after each export.
 
 ---
 
@@ -158,6 +164,26 @@ You will see an interactive prompt:
 - Generates:
   - `exports/time-entries_<start>_to_<end>.csv`
   - `exports/summary_<start>_to_<end>.txt`
+  - `exports/invoice_<INVOICE_CODE>_<start>_to_<end>.pdf` (if `INVOICE_PDF_ENABLE=1`)
+
+`pdfmake` generates the PDF directly (no Chromium installation needed).
+
+#### Optional: e-mail (Gmail) após o export
+
+Com `EMAIL_ENABLE=1`, após gravar CSV, `summary` e PDF, o app envia um e-mail em inglês ao Finance com **CSV + PDF** em anexo (o PDF só entra se `INVOICE_PDF_ENABLE=1`).
+
+Configure no `.env`:
+
+- `GMAIL_USER` — conta Gmail
+- `GMAIL_APP_PASSWORD` — [senha de app](https://myaccount.google.com/apppasswords) (não use a senha normal da conta)
+- `EMAIL_TO` — destinatários separados por vírgula ou `;`
+- Opcionais: `EMAIL_FROM` (default = `GMAIL_USER`), `EMAIL_SIGNATURE_NAME` (default = `INVOICE_FROM_NAME`)
+
+O assunto segue o período, ex.: `Invoice - March 1st - March 15th, 2026`. Horas e valor no corpo são lidos do `summary_*.txt` gerado na mesma execução.
+
+**Assinatura do Gmail:** envios por SMTP **não** usam a assinatura guardada em *Gmail → Configurações*. O repo inclui `email-signature.html` (contacto Springbolt) — ativa com `EMAIL_SIGNATURE_HTML_FILE=./email-signature.html` no `.env`. A primeira linha usa placeholders `{{SIGNATURE_DISPLAY_NAME}}` e `{{SIGNATURE_JOB_TITLE}}`, preenchidos por `EMAIL_SIGNATURE_DISPLAY_NAME` e `EMAIL_SIGNATURE_JOB_TITLE` (fallback do nome: `EMAIL_SIGNATURE_NAME`). Os clientes recebem `text/plain` + `text/html` com esse bloco no fim.
+
+Se o envio falhar, o export dos arquivos **não** é desfeito; o erro aparece no log / resposta JSON (`emailError`).
 
 ---
 
@@ -171,7 +197,7 @@ The server starts and exposes:
 
 - `GET /export/fortnight?start=YYYY-MM-DD&end=YYYY-MM-DD`  
   - If `start`/`end` are omitted, it uses the current fortnight rule.
-  - Writes CSV and summary files in `exports/`.
+  - Writes CSV, summary, and (optional) invoice PDF in `exports/`.
 
 ---
 
@@ -206,6 +232,6 @@ For each run it:
 
 - Computes the last fortnight range.
 - Fetches your ClickUp time entries.
-- Writes new CSV + summary files under `exports/`.
+- Writes new CSV + summary files under `exports/` (and invoice PDF when `INVOICE_PDF_ENABLE=1`).
 
 Make sure the server is running continuously (e.g. via systemd, PM2, Docker, etc.) if you want the cron behavior in production.
